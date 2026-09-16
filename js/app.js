@@ -1,10 +1,10 @@
 // ===================================================================
 // TIKENOD VENTURES — CORE CLIENT APPLICATION
-// Seamless Direct-to-Storefront Navigation & Fast Inquiries
+// Dynamic Theme Engine from GInvoice API + Rich Category & Product Images
 // ===================================================================
 
 document.addEventListener('DOMContentLoaded', () => {
-  // Global State
+  // Global Store Configuration
   const products = (typeof PRODUCTS_DATA !== 'undefined') ? PRODUCTS_DATA : [];
   const storeUrl = (typeof STORE_CONFIG !== 'undefined' && STORE_CONFIG.ginvoiceUrl) 
     ? STORE_CONFIG.ginvoiceUrl 
@@ -29,6 +29,60 @@ document.addEventListener('DOMContentLoaded', () => {
   const inStockCheckbox = document.getElementById('instock-checkbox');
   const resultsCount = document.getElementById('results-count');
   const paginationRow = document.getElementById('pagination-row');
+
+  // ===================================================================
+  // 1. DYNAMIC THEME ENGINE (Synced with GInvoice Storefront Settings)
+  // ===================================================================
+  function hexToRgb(hex) {
+    hex = hex.replace('#', '').trim();
+    if (hex.length === 3) hex = hex.split('').map(c => c + c).join('');
+    const num = parseInt(hex, 16);
+    if (isNaN(num)) return { r: 225, g: 29, b: 72 };
+    return {
+      r: (num >> 16) & 255,
+      g: (num >> 8) & 255,
+      b: num & 255
+    };
+  }
+
+  function adjustBrightness(r, g, b, factor) {
+    const nr = Math.max(0, Math.min(255, Math.round(r * factor)));
+    const ng = Math.max(0, Math.min(255, Math.round(g * factor)));
+    const nb = Math.max(0, Math.min(255, Math.round(b * factor)));
+    return '#' + [nr, ng, nb].map(c => c.toString(16).padStart(2, '0')).join('');
+  }
+
+  function applyStoreTheme(hexColor) {
+    if (!hexColor || !hexColor.startsWith('#')) return;
+    try {
+      const { r, g, b } = hexToRgb(hexColor);
+      const primaryDark = adjustBrightness(r, g, b, 0.82);
+      const primaryLight = `rgba(${r}, ${g}, ${b}, 0.16)`;
+      const primarySubtle = `rgba(${r}, ${g}, ${b}, 0.08)`;
+      const primaryGradient = `linear-gradient(135deg, ${hexColor} 0%, ${primaryDark} 100%)`;
+      const shadowGlow = `0 10px 25px rgba(${r}, ${g}, ${b}, 0.28)`;
+
+      const root = document.documentElement;
+      root.style.setProperty('--primary', hexColor);
+      root.style.setProperty('--primary-dark', primaryDark);
+      root.style.setProperty('--primary-light', primaryLight);
+      root.style.setProperty('--primary-subtle', primarySubtle);
+      root.style.setProperty('--primary-gradient', primaryGradient);
+      root.style.setProperty('--shadow-glow', shadowGlow);
+
+      const metaTheme = document.querySelector('meta[name="theme-color"]');
+      if (metaTheme) metaTheme.setAttribute('content', hexColor);
+
+      localStorage.setItem('tikenod_theme_color', hexColor);
+      console.log('[Theme Engine] Successfully applied GInvoice brand color:', hexColor);
+    } catch (e) {
+      console.warn('[Theme Engine] Theme calculation error:', e);
+    }
+  }
+
+  // Load cached color immediately to prevent flash
+  const cachedColor = localStorage.getItem('tikenod_theme_color') || '#e11d48';
+  applyStoreTheme(cachedColor);
 
   // Format Currency (Naira)
   function formatNaira(amount) {
@@ -61,57 +115,125 @@ document.addEventListener('DOMContentLoaded', () => {
     }, 2800);
   }
 
-  // 1. Render Category Quick-Nav Cards
+  // ===================================================================
+  // 2. PRODUCT & CATEGORY IMAGE RESOLUTION
+  // ===================================================================
+  const categoryMetadata = [
+    {
+      name: 'Zippers & Sliders',
+      image: 'https://images.unsplash.com/photo-1596461404969-9ae70f2830c1?w=600&auto=format&fit=crop&q=80',
+      desc: 'Invisible, rainbow, iron, polo & big-head zippers'
+    },
+    {
+      name: 'Fabrics & Linings',
+      image: 'https://images.unsplash.com/photo-1528458876861-544fd1761a91?w=600&auto=format&fit=crop&q=80',
+      desc: 'Taffeta, bridal dull face, organza, chiffon, net & linings'
+    },
+    {
+      name: 'Laces & Trims',
+      image: 'https://images.unsplash.com/photo-1605289982774-9a6fef564df8?w=600&auto=format&fit=crop&q=80',
+      desc: 'Chantilly laces, beans lace, fancy trims & borders'
+    },
+    {
+      name: 'Threads & Cones',
+      image: 'https://images.unsplash.com/photo-1584992236310-6edddc08acff?w=600&auto=format&fit=crop&q=80',
+      desc: '1000m black & white industrial cones, sewing threads'
+    },
+    {
+      name: 'Gums & Interfacings',
+      image: 'https://images.unsplash.com/photo-1607344645866-009c320c5ab8?w=600&auto=format&fit=crop&q=80',
+      desc: 'Paper gum, hemming gum, hair stay & garment stabilizers'
+    },
+    {
+      name: 'Buttons & Fasteners',
+      image: 'https://images.unsplash.com/photo-1563245372-f21724e3856d?w=600&auto=format&fit=crop&q=80',
+      desc: 'Chinese buttons, fancy fasteners, blazer buttons & studs'
+    },
+    {
+      name: 'Packaging & Tools',
+      image: 'https://images.unsplash.com/photo-1530587191325-3db32d826c18?w=600&auto=format&fit=crop&q=80',
+      desc: 'Packaging leather, brown paper, garment bags'
+    },
+    {
+      name: 'Haberdashery & Accessories',
+      image: 'https://images.unsplash.com/photo-1598532163257-ae3c6b2524b6?w=600&auto=format&fit=crop&q=80',
+      desc: 'Bias rolls, measuring tapes, chalk & tailor essentials'
+    }
+  ];
+
+  function getProductImage(product) {
+    const name = (product.name || '').toLowerCase();
+    const cat = (product.category || '').toLowerCase();
+    const group = product.group || '';
+
+    if (name.includes('zip') || cat.includes('zip') || group === 'Zippers & Sliders') {
+      return 'https://images.unsplash.com/photo-1596461404969-9ae70f2830c1?w=500&auto=format&fit=crop&q=80';
+    }
+    if (name.includes('lace') || cat.includes('lace') || name.includes('trim') || group === 'Laces & Trims') {
+      return 'https://images.unsplash.com/photo-1605289982774-9a6fef564df8?w=500&auto=format&fit=crop&q=80';
+    }
+    if (name.includes('thread') || name.includes('cone') || cat.includes('cone') || group === 'Threads & Cones') {
+      return 'https://images.unsplash.com/photo-1584992236310-6edddc08acff?w=500&auto=format&fit=crop&q=80';
+    }
+    if (name.includes('button') || cat.includes('button') || group === 'Buttons & Fasteners') {
+      return 'https://images.unsplash.com/photo-1563245372-f21724e3856d?w=500&auto=format&fit=crop&q=80';
+    }
+    if (name.includes('gum') || name.includes('stay') || name.includes('interfacing') || group === 'Gums & Interfacings') {
+      return 'https://images.unsplash.com/photo-1607344645866-009c320c5ab8?w=500&auto=format&fit=crop&q=80';
+    }
+    if (name.includes('leather') || name.includes('paper') || group === 'Packaging & Tools') {
+      return 'https://images.unsplash.com/photo-1530587191325-3db32d826c18?w=500&auto=format&fit=crop&q=80';
+    }
+    if (name.includes('tapeta') || name.includes('taffeta') || name.includes('bridal') || name.includes('dull face') || name.includes('organz') || name.includes('chiffon') || name.includes('net') || name.includes('lining') || group === 'Fabrics & Linings') {
+      return 'https://images.unsplash.com/photo-1528458876861-544fd1761a91?w=500&auto=format&fit=crop&q=80';
+    }
+    return 'https://images.unsplash.com/photo-1558769132-cb1aea458c5e?w=500&auto=format&fit=crop&q=80';
+  }
+
+  // ===================================================================
+  // 3. RENDER CATEGORY QUICK-NAV CARDS WITH IMAGES
+  // ===================================================================
   function renderCategoryCards() {
     if (!categoriesGrid) return;
-
-    const groups = [
-      { name: 'Zippers & Sliders', icon: 'zap', desc: 'Invisible, rainbow, iron & big-head zippers' },
-      { name: 'Fabrics & Linings', icon: 'layers', desc: 'Taffeta, bridal dull face, organza, chiffon' },
-      { name: 'Laces & Trims', icon: 'feather', desc: 'Chantilly laces, beans lace, fancy trims' },
-      { name: 'Threads & Cones', icon: 'disc', desc: '1000m black & white cones, sewing threads' },
-      { name: 'Gums & Interfacings', icon: 'shield', desc: 'Paper gum, hemming gum, hair stay' },
-      { name: 'Buttons & Fasteners', icon: 'circle', desc: 'Chinese buttons, fancy fasteners & studs' },
-      { name: 'Packaging & Tools', icon: 'package', desc: 'Packaging leather, brown paper, essentials' },
-      { name: 'Haberdashery & Accessories', icon: 'grid', desc: 'Bias rolls, measuring tapes, chalk & trims' }
-    ];
 
     const counts = {};
     products.forEach(p => {
       counts[p.group] = (counts[p.group] || 0) + 1;
     });
 
-    categoriesGrid.innerHTML = groups.map(g => {
+    categoriesGrid.innerHTML = categoryMetadata.map(g => {
       const count = counts[g.name] || 0;
       return `
         <div class="category-card">
-          <div>
-            <div class="cat-icon">
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
-                <line x1="3" y1="9" x2="21" y2="9"></line>
-                <line x1="9" y1="21" x2="9" y2="9"></line>
-              </svg>
+          <div class="cat-img-wrap">
+            <img src="${g.image}" alt="${g.name}" class="cat-img" loading="lazy" />
+            <div class="cat-img-overlay">
+              <span class="cat-badge-overlay">${count} items online</span>
             </div>
-            <h3 class="cat-name">${g.name}</h3>
-            <p style="font-size:0.8rem; color:var(--text-muted); margin-bottom:8px;">${g.desc}</p>
-            <span class="cat-count">${count} items catalogued</span>
           </div>
-          <div class="cat-card-actions">
-            <button class="cat-filter-btn" onclick="window.selectCategory('${g.name}')">
-              <span>View Items</span>
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"></polyline></svg>
-            </button>
-            <a href="${storeUrl}" target="_blank" rel="noopener noreferrer" class="cat-store-link" title="Open ${g.name} on GInvoice Storefront">
-              <span>Order on Store ↗</span>
-            </a>
+          <div class="cat-body">
+            <div>
+              <h3 class="cat-name">${g.name}</h3>
+              <p style="font-size:0.825rem; color:var(--text-muted); margin-bottom:12px;">${g.desc}</p>
+            </div>
+            <div class="cat-card-actions">
+              <button class="cat-filter-btn" onclick="window.selectCategory('${g.name}')">
+                <span>View Products</span>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"></polyline></svg>
+              </button>
+              <a href="${storeUrl}" target="_blank" rel="noopener noreferrer" class="cat-store-link" title="Open ${g.name} on GInvoice Storefront">
+                <span>Order on Store ↗</span>
+              </a>
+            </div>
           </div>
         </div>
       `;
     }).join('');
   }
 
-  // 2. Render Filter Pills
+  // ===================================================================
+  // 4. RENDER FILTER PILLS
+  // ===================================================================
   function renderFilterPills() {
     if (!filterPillsRow) return;
     const categoryList = ['All', 'Zippers & Sliders', 'Fabrics & Linings', 'Laces & Trims', 'Threads & Cones', 'Gums & Interfacings', 'Buttons & Fasteners', 'Packaging & Tools', 'Haberdashery & Accessories'];
@@ -122,7 +244,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }).join('');
   }
 
-  // Select Category handler
   window.selectCategory = function(cat) {
     currentCategory = cat;
     currentPage = 1;
@@ -134,7 +255,9 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   };
 
-  // 3. Filter and Sort Products
+  // ===================================================================
+  // 5. FILTER AND SORT PRODUCTS
+  // ===================================================================
   function getFilteredProducts() {
     return products.filter(p => {
       if (currentCategory !== 'All' && p.group !== currentCategory) {
@@ -168,7 +291,9 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // 4. Render Products Grid & Pagination
+  // ===================================================================
+  // 6. RENDER PRODUCTS GRID WITH IMAGES & DIRECT GINVOICE REDIRECTION
+  // ===================================================================
   function renderProducts() {
     if (!productsGrid) return;
     const filtered = getFilteredProducts();
@@ -202,8 +327,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     productsGrid.innerHTML = pageProducts.map(p => {
       const stockBadge = p.inStock
-        ? `<span class="stock-badge in-stock"><span style="font-size:1.1rem; line-height:1;">•</span> In Stock (${p.stock})</span>`
-        : `<span class="stock-badge out-of-stock"><span style="font-size:1.1rem; line-height:1;">•</span> Low / Pre-order</span>`;
+        ? `<span class="product-badge-stock" style="color:#059669;">• In Stock (${p.stock})</span>`
+        : `<span class="product-badge-stock" style="color:#dc2626;">• Pre-order</span>`;
 
       const unitVariantText = (p.units && p.units.length > 0)
         ? `<span class="unit-variants-hint">Variant: ${p.units[0].name} (${formatNaira(p.units[0].sellingPrice)})</span>`
@@ -211,13 +336,19 @@ document.addEventListener('DOMContentLoaded', () => {
 
       const waMsg = encodeURIComponent(`Hello Tikenod Ventures! 👋 I saw this item on your website and want to place an order:\n\n• Product: ${p.name}\n• Category: ${p.category}\n• Price: ${formatNaira(p.price)} / ${p.unit || 'Piece'}\n\nPlease confirm availability and delivery options.`);
 
+      const imgUrl = getProductImage(p);
+
       return `
         <div class="product-card" id="card-${p.id}">
-          <div class="product-card-top">
-            <div class="product-meta-row">
-              <span class="product-group-badge">${p.group}</span>
+          <a href="${storeUrl}" target="_blank" rel="noopener noreferrer" class="product-img-wrap" title="Click to order ${escapeHtml(p.name)} on GInvoice">
+            <img src="${imgUrl}" alt="${escapeHtml(p.name)}" class="product-img" loading="lazy" onerror="this.src='https://images.unsplash.com/photo-1558769132-cb1aea458c5e?w=500&auto=format&fit=crop&q=80'" />
+            <div class="product-img-overlay">
+              <span class="product-badge-group">${p.group}</span>
               ${stockBadge}
             </div>
+          </a>
+
+          <div class="product-card-top">
             <a href="${storeUrl}" target="_blank" rel="noopener noreferrer" class="product-name" title="Order on official GInvoice storefront">
               ${escapeHtml(p.name)}
             </a>
@@ -232,7 +363,7 @@ document.addEventListener('DOMContentLoaded', () => {
             ${unitVariantText}
 
             <div class="product-card-actions">
-              <a href="${storeUrl}" target="_blank" rel="noopener noreferrer" class="btn btn-primary btn-sm" title="Order ${escapeHtml(p.name)} on official GInvoice store">
+              <a href="${storeUrl}" target="_blank" rel="noopener noreferrer" class="btn btn-primary btn-sm" title="Order ${escapeHtml(p.name)} directly on official GInvoice store">
                 <span>Order on Store ↗</span>
               </a>
               <a href="https://wa.me/${storePhone}?text=${waMsg}" target="_blank" rel="noopener noreferrer" class="btn btn-secondary btn-sm" title="Inquire on WhatsApp">
@@ -248,7 +379,9 @@ document.addEventListener('DOMContentLoaded', () => {
     renderPagination(totalPages);
   }
 
-  // 5. Render Pagination
+  // ===================================================================
+  // 7. PAGINATION & FILTERS
+  // ===================================================================
   function renderPagination(totalPages) {
     if (!paginationRow) return;
     if (totalPages <= 1) {
@@ -305,7 +438,6 @@ document.addEventListener('DOMContentLoaded', () => {
     renderProducts();
   };
 
-  // Search input with debounce
   let searchTimeout = null;
   if (searchInput) {
     searchInput.addEventListener('input', (e) => {
@@ -318,7 +450,6 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // Sort change
   if (sortSelect) {
     sortSelect.addEventListener('change', (e) => {
       sortOption = e.target.value;
@@ -327,7 +458,6 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // In stock toggle
   if (inStockCheckbox) {
     inStockCheckbox.addEventListener('change', (e) => {
       onlyInStock = e.target.checked;
@@ -336,7 +466,6 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // Mobile Menu Toggle
   const mobileMenuBtn = document.getElementById('mobile-menu-btn');
   const mobileMenuDrawer = document.getElementById('mobile-menu-drawer');
   if (mobileMenuBtn && mobileMenuDrawer) {
@@ -345,7 +474,6 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // Helper: Escape HTML
   function escapeHtml(text) {
     if (!text) return '';
     const div = document.createElement('div');
@@ -353,12 +481,22 @@ document.addEventListener('DOMContentLoaded', () => {
     return div.innerHTML;
   }
 
-  // Background Live Sync with GInvoice Public API
+  // ===================================================================
+  // 8. LIVE SYNC WITH GINVOICE API (THEME COLOR + LIVE STATUS)
+  // ===================================================================
   async function syncWithGInvoiceAPI() {
     try {
       const response = await fetch('https://ginvoice.com.ng/api/public/store/tikenod-ventures');
       if (response.ok) {
         const liveData = await response.json();
+        
+        // 1. Dynamic Brand Color Sync from GInvoice settings!
+        if (liveData && liveData.store && liveData.store.theme && liveData.store.theme.primaryColor) {
+          const liveColor = liveData.store.theme.primaryColor;
+          applyStoreTheme(liveColor);
+        }
+
+        // 2. Dynamic Banner Text Sync
         if (liveData && liveData.store && liveData.store.storeSettings) {
           const banner = liveData.store.storeSettings.bannerText;
           if (banner) {
@@ -368,7 +506,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
       }
     } catch (err) {
-      console.log('[GInvoice Live Sync] Running in high-speed local mode:', err.message);
+      console.log('[GInvoice Live Sync] Running in high-speed cached mode:', err.message);
     }
   }
 
