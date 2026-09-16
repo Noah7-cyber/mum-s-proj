@@ -1,20 +1,24 @@
 // ===================================================================
-// TIKENOD VENTURES - CORE INTERACTIVE APPLICATION
-// Powered by GInvoice Market OS (ginvoice.com.ng)
+// TIKENOD VENTURES — CORE CLIENT APPLICATION
+// Seamless Direct-to-Storefront Navigation & Fast Inquiries
 // ===================================================================
 
 document.addEventListener('DOMContentLoaded', () => {
   // Global State
-  let products = (typeof PRODUCTS_DATA !== 'undefined') ? PRODUCTS_DATA : [];
+  const products = (typeof PRODUCTS_DATA !== 'undefined') ? PRODUCTS_DATA : [];
+  const storeUrl = (typeof STORE_CONFIG !== 'undefined' && STORE_CONFIG.ginvoiceUrl) 
+    ? STORE_CONFIG.ginvoiceUrl 
+    : 'https://ginvoice.com.ng/c/tikenod-ventures';
+  const storePhone = (typeof STORE_CONFIG !== 'undefined' && STORE_CONFIG.phone) 
+    ? STORE_CONFIG.phone 
+    : '2348053472434';
+
   let currentCategory = 'All';
   let searchQuery = '';
   let sortOption = 'featured';
   let onlyInStock = false;
   let currentPage = 1;
   const itemsPerPage = 24;
-
-  // Cart State (stored in localStorage)
-  let cart = JSON.parse(localStorage.getItem('tikenod_cart') || '[]');
 
   // DOM Elements
   const productsGrid = document.getElementById('products-grid');
@@ -25,21 +29,6 @@ document.addEventListener('DOMContentLoaded', () => {
   const inStockCheckbox = document.getElementById('instock-checkbox');
   const resultsCount = document.getElementById('results-count');
   const paginationRow = document.getElementById('pagination-row');
-  
-  // Cart DOM Elements
-  const cartNavBtn = document.getElementById('cart-nav-btn');
-  const floatingCartBtn = document.getElementById('floating-cart-btn');
-  const cartBadge = document.getElementById('cart-badge');
-  const floatingCartBadge = document.getElementById('floating-cart-badge');
-  const cartDrawer = document.getElementById('cart-drawer');
-  const cartBackdrop = document.getElementById('cart-backdrop');
-  const cartCloseBtn = document.getElementById('cart-close-btn');
-  const cartItemsList = document.getElementById('cart-items-list');
-  const cartSubtotal = document.getElementById('cart-subtotal');
-  const cartWhatsappBtn = document.getElementById('cart-whatsapp-btn');
-  const customerNameInput = document.getElementById('customer-name-input');
-  const customerNoteInput = document.getElementById('customer-note-input');
-  const clearCartBtn = document.getElementById('clear-cart-btn');
 
   // Format Currency (Naira)
   function formatNaira(amount) {
@@ -75,8 +64,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // 1. Render Category Quick-Nav Cards
   function renderCategoryCards() {
     if (!categoriesGrid) return;
-    
-    // Group definitions with friendly icons and counts
+
     const groups = [
       { name: 'Zippers & Sliders', icon: 'zap', desc: 'Invisible, rainbow, iron & big-head zippers' },
       { name: 'Fabrics & Linings', icon: 'layers', desc: 'Taffeta, bridal dull face, organza, chiffon' },
@@ -96,7 +84,7 @@ document.addEventListener('DOMContentLoaded', () => {
     categoriesGrid.innerHTML = groups.map(g => {
       const count = counts[g.name] || 0;
       return `
-        <div class="category-card" onclick="window.selectCategory('${g.name}')">
+        <div class="category-card">
           <div>
             <div class="cat-icon">
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -107,13 +95,16 @@ document.addEventListener('DOMContentLoaded', () => {
             </div>
             <h3 class="cat-name">${g.name}</h3>
             <p style="font-size:0.8rem; color:var(--text-muted); margin-bottom:8px;">${g.desc}</p>
-            <span class="cat-count">${count} items available</span>
+            <span class="cat-count">${count} items catalogued</span>
           </div>
-          <div class="cat-link-label">
-            <span>Explore Category</span>
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-              <polyline points="9 18 15 12 9 6"></polyline>
-            </svg>
+          <div class="cat-card-actions">
+            <button class="cat-filter-btn" onclick="window.selectCategory('${g.name}')">
+              <span>View Items</span>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"></polyline></svg>
+            </button>
+            <a href="${storeUrl}" target="_blank" rel="noopener noreferrer" class="cat-store-link" title="Open ${g.name} on GInvoice Storefront">
+              <span>Order on Store ↗</span>
+            </a>
           </div>
         </div>
       `;
@@ -146,15 +137,12 @@ document.addEventListener('DOMContentLoaded', () => {
   // 3. Filter and Sort Products
   function getFilteredProducts() {
     return products.filter(p => {
-      // Category filter
       if (currentCategory !== 'All' && p.group !== currentCategory) {
         return false;
       }
-      // In stock filter
       if (onlyInStock && !p.inStock) {
         return false;
       }
-      // Search query
       if (searchQuery.trim() !== '') {
         const q = searchQuery.toLowerCase();
         const matchName = p.name.toLowerCase().includes(q);
@@ -173,7 +161,6 @@ document.addEventListener('DOMContentLoaded', () => {
       } else if (sortOption === 'stock') {
         return (b.stock || 0) - (a.stock || 0);
       } else {
-        // Featured
         if (a.featured && !b.featured) return -1;
         if (!a.featured && b.featured) return 1;
         return (b.inStock ? 1 : 0) - (a.inStock ? 1 : 0);
@@ -190,7 +177,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (currentPage > totalPages) currentPage = 1;
 
-    // Results count
     if (resultsCount) {
       resultsCount.innerHTML = `Showing <strong>${Math.min((currentPage - 1) * itemsPerPage + 1, totalCount)} - ${Math.min(currentPage * itemsPerPage, totalCount)}</strong> of <strong>${totalCount}</strong> items`;
     }
@@ -203,7 +189,7 @@ document.addEventListener('DOMContentLoaded', () => {
             <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
           </svg>
           <h3 style="font-size:1.2rem; font-weight:800; margin-bottom:6px;">No products found</h3>
-          <p style="color:var(--text-muted); font-size:0.9rem; margin-bottom:16px;">Try adjusting your search terms or filter settings.</p>
+          <p style="color:var(--text-muted); font-size:0.9rem; margin-bottom:16px;">Try adjusting your search query or reset filters.</p>
           <button class="btn btn-secondary btn-sm" onclick="window.resetFilters()">Reset All Filters</button>
         </div>
       `;
@@ -223,6 +209,8 @@ document.addEventListener('DOMContentLoaded', () => {
         ? `<span class="unit-variants-hint">Variant: ${p.units[0].name} (${formatNaira(p.units[0].sellingPrice)})</span>`
         : '';
 
+      const waMsg = encodeURIComponent(`Hello Tikenod Ventures! 👋 I saw this item on your website and want to place an order:\n\n• Product: ${p.name}\n• Category: ${p.category}\n• Price: ${formatNaira(p.price)} / ${p.unit || 'Piece'}\n\nPlease confirm availability and delivery options.`);
+
       return `
         <div class="product-card" id="card-${p.id}">
           <div class="product-card-top">
@@ -230,7 +218,9 @@ document.addEventListener('DOMContentLoaded', () => {
               <span class="product-group-badge">${p.group}</span>
               ${stockBadge}
             </div>
-            <h4 class="product-name">${escapeHtml(p.name)}</h4>
+            <a href="${storeUrl}" target="_blank" rel="noopener noreferrer" class="product-name" title="Order on official GInvoice storefront">
+              ${escapeHtml(p.name)}
+            </a>
             <div class="product-cat-name">${escapeHtml(p.category)}</div>
           </div>
 
@@ -242,20 +232,13 @@ document.addEventListener('DOMContentLoaded', () => {
             ${unitVariantText}
 
             <div class="product-card-actions">
-              <a href="https://ginvoice.com.ng/c/tikenod-ventures" target="_blank" rel="noopener noreferrer" class="btn btn-primary btn-sm" title="Direct order on official GInvoice storefront">
-                <span>Order on GInvoice</span>
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-                  <line x1="7" y1="17" x2="17" y2="7"></line>
-                  <polyline points="7 7 17 7 17 17"></polyline>
-                </svg>
+              <a href="${storeUrl}" target="_blank" rel="noopener noreferrer" class="btn btn-primary btn-sm" title="Order ${escapeHtml(p.name)} on official GInvoice store">
+                <span>Order on Store ↗</span>
               </a>
-              <button class="btn btn-secondary btn-sm" onclick="window.addToCart('${p.id}')" title="Add to your custom order bag">
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-                  <line x1="12" y1="5" x2="12" y2="19"></line>
-                  <line x1="5" y1="12" x2="19" y2="12"></line>
-                </svg>
-                <span>+ Bag</span>
-              </button>
+              <a href="https://wa.me/${storePhone}?text=${waMsg}" target="_blank" rel="noopener noreferrer" class="btn btn-secondary btn-sm" title="Inquire on WhatsApp">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981z"/></svg>
+                <span>WhatsApp</span>
+              </a>
             </div>
           </div>
         </div>
@@ -279,7 +262,6 @@ document.addEventListener('DOMContentLoaded', () => {
       </button>
     `;
 
-    // Max 5 page pills
     let startPage = Math.max(1, currentPage - 2);
     let endPage = Math.min(totalPages, startPage + 4);
     if (endPage - startPage < 4) {
@@ -322,155 +304,6 @@ document.addEventListener('DOMContentLoaded', () => {
     renderFilterPills();
     renderProducts();
   };
-
-  // 6. Cart / Order Bag Functions
-  window.addToCart = function(productId) {
-    const item = products.find(p => p.id === productId);
-    if (!item) return;
-
-    const existing = cart.find(ci => ci.id === productId);
-    if (existing) {
-      existing.quantity += 1;
-    } else {
-      cart.push({
-        id: item.id,
-        name: item.name,
-        price: item.price,
-        unit: item.unit,
-        category: item.category,
-        quantity: 1
-      });
-    }
-    saveCart();
-    showToast(`Added "${item.name}" to Order Bag`);
-  };
-
-  window.updateCartQty = function(productId, delta) {
-    const item = cart.find(ci => ci.id === productId);
-    if (!item) return;
-    item.quantity += delta;
-    if (item.quantity <= 0) {
-      cart = cart.filter(ci => ci.id !== productId);
-    }
-    saveCart();
-  };
-
-  window.removeFromCart = function(productId) {
-    cart = cart.filter(ci => ci.id !== productId);
-    saveCart();
-  };
-
-  function saveCart() {
-    localStorage.setItem('tikenod_cart', JSON.stringify(cart));
-    updateCartUI();
-  }
-
-  function updateCartUI() {
-    const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
-    const subtotal = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-
-    if (cartBadge) cartBadge.textContent = totalItems;
-    if (floatingCartBadge) floatingCartBadge.textContent = totalItems;
-    if (cartSubtotal) cartSubtotal.textContent = formatNaira(subtotal);
-
-    if (!cartItemsList) return;
-
-    if (cart.length === 0) {
-      cartItemsList.innerHTML = `
-        <div class="empty-cart-state">
-          <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-            <circle cx="9" cy="21" r="1"></circle>
-            <circle cx="20" cy="21" r="1"></circle>
-            <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
-          </svg>
-          <h4 style="font-weight:700; margin-bottom:4px; color:var(--dark);">Your order bag is empty</h4>
-          <p style="font-size:0.85rem;">Browse products and add tailoring supplies to send via WhatsApp or order on GInvoice.</p>
-        </div>
-      `;
-      if (cartWhatsappBtn) {
-        cartWhatsappBtn.disabled = true;
-        cartWhatsappBtn.style.opacity = '0.5';
-      }
-      return;
-    }
-
-    if (cartWhatsappBtn) {
-      cartWhatsappBtn.disabled = false;
-      cartWhatsappBtn.style.opacity = '1';
-    }
-
-    cartItemsList.innerHTML = cart.map(item => `
-      <div class="cart-item">
-        <div class="cart-item-info">
-          <h5>${escapeHtml(item.name)}</h5>
-          <span>${formatNaira(item.price)} / ${item.unit || 'Piece'}</span>
-        </div>
-        <div class="cart-item-qty">
-          <button class="qty-btn" onclick="window.updateCartQty('${item.id}', -1)" aria-label="Decrease quantity">−</button>
-          <span class="qty-val">${item.quantity}</span>
-          <button class="qty-btn" onclick="window.updateCartQty('${item.id}', 1)" aria-label="Increase quantity">+</button>
-          <button class="qty-btn" style="color:#ef4444;" onclick="window.removeFromCart('${item.id}')" aria-label="Remove item">✕</button>
-        </div>
-      </div>
-    `).join('');
-  }
-
-  // WhatsApp Order Submission
-  if (cartWhatsappBtn) {
-    cartWhatsappBtn.addEventListener('click', () => {
-      if (cart.length === 0) return;
-
-      const customerName = (customerNameInput && customerNameInput.value.trim()) || 'Valued Customer';
-      const customerNote = (customerNoteInput && customerNoteInput.value.trim()) || 'Barnawa Store Pickup / Kaduna Delivery';
-      const subtotal = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-
-      let msg = `*NEW ORDER FOR TIKENOD VENTURES* ✂️🧵\n`;
-      msg += `===============================\n`;
-      msg += `👤 *Customer Name:* ${customerName}\n`;
-      msg += `📍 *Delivery/Pickup:* ${customerNote}\n\n`;
-      msg += `*ORDER ITEMS:*\n`;
-
-      cart.forEach((item, idx) => {
-        const itemTotal = item.price * item.quantity;
-        msg += `${idx + 1}. ${item.name} x${item.quantity} ${item.unit || 'pc'} - ${formatNaira(itemTotal)}\n`;
-      });
-
-      msg += `\n*ESTIMATED TOTAL:* ${formatNaira(subtotal)}\n`;
-      msg += `===============================\n`;
-      msg += `Ordered via Tikenod Ventures Landing Page (Powered by GInvoice Market OS)`;
-
-      const phone = (typeof STORE_CONFIG !== 'undefined' && STORE_CONFIG.phone) ? STORE_CONFIG.phone : '2348053472434';
-      const url = `https://wa.me/${phone}?text=${encodeURIComponent(msg)}`;
-      window.open(url, '_blank');
-    });
-  }
-
-  if (clearCartBtn) {
-    clearCartBtn.addEventListener('click', () => {
-      if (confirm('Clear all items from your order bag?')) {
-        cart = [];
-        saveCart();
-      }
-    });
-  }
-
-  // Cart Drawer Toggles
-  function openCart() {
-    if (cartDrawer) cartDrawer.classList.add('active');
-    if (cartBackdrop) cartBackdrop.classList.add('active');
-    document.body.style.overflow = 'hidden';
-  }
-
-  function closeCart() {
-    if (cartDrawer) cartDrawer.classList.remove('active');
-    if (cartBackdrop) cartBackdrop.classList.remove('active');
-    document.body.style.overflow = '';
-  }
-
-  if (cartNavBtn) cartNavBtn.addEventListener('click', openCart);
-  if (floatingCartBtn) floatingCartBtn.addEventListener('click', openCart);
-  if (cartCloseBtn) cartCloseBtn.addEventListener('click', closeCart);
-  if (cartBackdrop) cartBackdrop.addEventListener('click', closeCart);
 
   // Search input with debounce
   let searchTimeout = null;
@@ -520,27 +353,22 @@ document.addEventListener('DOMContentLoaded', () => {
     return div.innerHTML;
   }
 
-  // Attempt Live Sync with GInvoice Public API in Background
+  // Background Live Sync with GInvoice Public API
   async function syncWithGInvoiceAPI() {
     try {
       const response = await fetch('https://ginvoice.com.ng/api/public/store/tikenod-ventures');
       if (response.ok) {
         const liveData = await response.json();
-        if (liveData && liveData.products && liveData.products.length > 0) {
-          console.log('[GInvoice Live Sync] Loaded ' + liveData.products.length + ' products from live API');
-          // Update live store status or banner if available
-          if (liveData.store && liveData.store.storeSettings) {
-            const banner = liveData.store.storeSettings.bannerText;
-            if (banner) {
-              const noticeEl = document.getElementById('live-store-banner');
-              if (noticeEl) noticeEl.textContent = banner;
-            }
+        if (liveData && liveData.store && liveData.store.storeSettings) {
+          const banner = liveData.store.storeSettings.bannerText;
+          if (banner) {
+            const noticeEl = document.getElementById('live-store-banner');
+            if (noticeEl) noticeEl.textContent = banner;
           }
         }
       }
     } catch (err) {
-      // Graceful offline fallback
-      console.log('[GInvoice Live Sync] Running in fast bundled mode:', err.message);
+      console.log('[GInvoice Live Sync] Running in high-speed local mode:', err.message);
     }
   }
 
@@ -548,6 +376,5 @@ document.addEventListener('DOMContentLoaded', () => {
   renderCategoryCards();
   renderFilterPills();
   renderProducts();
-  updateCartUI();
   syncWithGInvoiceAPI();
 });
