@@ -121,42 +121,42 @@ document.addEventListener('DOMContentLoaded', () => {
   const categoryMetadata = [
     {
       name: 'Zippers & Sliders',
-      image: 'https://images.unsplash.com/photo-1596461404969-9ae70f2830c1?w=600&auto=format&fit=crop&q=80',
+      image: 'assets/images/zippers.jpg',
       desc: 'Invisible, rainbow, iron, polo & big-head zippers'
     },
     {
       name: 'Fabrics & Linings',
-      image: 'https://images.unsplash.com/photo-1528458876861-544fd1761a91?w=600&auto=format&fit=crop&q=80',
+      image: 'assets/images/fabrics.jpg',
       desc: 'Taffeta, bridal dull face, organza, chiffon, net & linings'
     },
     {
       name: 'Laces & Trims',
-      image: 'https://images.unsplash.com/photo-1605289982774-9a6fef564df8?w=600&auto=format&fit=crop&q=80',
+      image: 'assets/images/laces.jpg',
       desc: 'Chantilly laces, beans lace, fancy trims & borders'
     },
     {
       name: 'Threads & Cones',
-      image: 'https://images.unsplash.com/photo-1584992236310-6edddc08acff?w=600&auto=format&fit=crop&q=80',
+      image: 'assets/images/threads.jpg',
       desc: '1000m black & white industrial cones, sewing threads'
     },
     {
       name: 'Gums & Interfacings',
-      image: 'https://images.unsplash.com/photo-1607344645866-009c320c5ab8?w=600&auto=format&fit=crop&q=80',
+      image: 'assets/images/gums.jpg',
       desc: 'Paper gum, hemming gum, hair stay & garment stabilizers'
     },
     {
       name: 'Buttons & Fasteners',
-      image: 'https://images.unsplash.com/photo-1563245372-f21724e3856d?w=600&auto=format&fit=crop&q=80',
+      image: 'assets/images/buttons.jpg',
       desc: 'Chinese buttons, fancy fasteners, blazer buttons & studs'
     },
     {
       name: 'Packaging & Tools',
-      image: 'https://images.unsplash.com/photo-1530587191325-3db32d826c18?w=600&auto=format&fit=crop&q=80',
-      desc: 'Packaging leather, brown paper, garment bags'
+      image: 'assets/images/haberdashery.jpg',
+      desc: 'Packaging leather, brown paper, tailor shears & tools'
     },
     {
       name: 'Haberdashery & Accessories',
-      image: 'https://images.unsplash.com/photo-1598532163257-ae3c6b2524b6?w=600&auto=format&fit=crop&q=80',
+      image: 'assets/images/haberdashery.jpg',
       desc: 'Bias rolls, measuring tapes, chalk & tailor essentials'
     }
   ];
@@ -167,27 +167,24 @@ document.addEventListener('DOMContentLoaded', () => {
     const group = product.group || '';
 
     if (name.includes('zip') || cat.includes('zip') || group === 'Zippers & Sliders') {
-      return 'https://images.unsplash.com/photo-1596461404969-9ae70f2830c1?w=500&auto=format&fit=crop&q=80';
+      return 'assets/images/zippers.jpg';
     }
     if (name.includes('lace') || cat.includes('lace') || name.includes('trim') || group === 'Laces & Trims') {
-      return 'https://images.unsplash.com/photo-1605289982774-9a6fef564df8?w=500&auto=format&fit=crop&q=80';
+      return 'assets/images/laces.jpg';
     }
     if (name.includes('thread') || name.includes('cone') || cat.includes('cone') || group === 'Threads & Cones') {
-      return 'https://images.unsplash.com/photo-1584992236310-6edddc08acff?w=500&auto=format&fit=crop&q=80';
+      return 'assets/images/threads.jpg';
     }
     if (name.includes('button') || cat.includes('button') || group === 'Buttons & Fasteners') {
-      return 'https://images.unsplash.com/photo-1563245372-f21724e3856d?w=500&auto=format&fit=crop&q=80';
+      return 'assets/images/buttons.jpg';
     }
-    if (name.includes('gum') || name.includes('stay') || name.includes('interfacing') || group === 'Gums & Interfacings') {
-      return 'https://images.unsplash.com/photo-1607344645866-009c320c5ab8?w=500&auto=format&fit=crop&q=80';
-    }
-    if (name.includes('leather') || name.includes('paper') || group === 'Packaging & Tools') {
-      return 'https://images.unsplash.com/photo-1530587191325-3db32d826c18?w=500&auto=format&fit=crop&q=80';
+    if (name.includes('gum') || name.includes('stay') || name.includes('interfacing') || name.includes('hemming') || group === 'Gums & Interfacings') {
+      return 'assets/images/gums.jpg';
     }
     if (name.includes('tapeta') || name.includes('taffeta') || name.includes('bridal') || name.includes('dull face') || name.includes('organz') || name.includes('chiffon') || name.includes('net') || name.includes('lining') || group === 'Fabrics & Linings') {
-      return 'https://images.unsplash.com/photo-1528458876861-544fd1761a91?w=500&auto=format&fit=crop&q=80';
+      return 'assets/images/fabrics.jpg';
     }
-    return 'https://images.unsplash.com/photo-1558769132-cb1aea458c5e?w=500&auto=format&fit=crop&q=80';
+    return 'assets/images/haberdashery.jpg';
   }
 
   // ===================================================================
@@ -341,7 +338,7 @@ document.addEventListener('DOMContentLoaded', () => {
       return `
         <div class="product-card" id="card-${p.id}">
           <a href="${storeUrl}" target="_blank" rel="noopener noreferrer" class="product-img-wrap" title="Click to order ${escapeHtml(p.name)} on GInvoice">
-            <img src="${imgUrl}" alt="${escapeHtml(p.name)}" class="product-img" loading="lazy" onerror="this.src='https://images.unsplash.com/photo-1558769132-cb1aea458c5e?w=500&auto=format&fit=crop&q=80'" />
+            <img src="${imgUrl}" alt="${escapeHtml(p.name)}" class="product-img" loading="lazy" onerror="this.src='assets/images/haberdashery.jpg'" />
             <div class="product-img-overlay">
               <span class="product-badge-group">${p.group}</span>
               ${stockBadge}
