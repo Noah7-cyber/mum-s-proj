@@ -48,8 +48,8 @@ The website incorporates the official **GInvoice Storefront** (`https://ginvoice
    - Direct WhatsApp & call links: **+234 805 347 2434** ([wa.me/2348053472434](https://wa.me/2348053472434)).
    - Social Media Handles:
      - **Instagram:** [instagram.com/yourhandle](https://instagram.com/yourhandle)
-     - **Facebook:** [facebook.com/yourpage](https://facebook.com/yourpage)
-     - **TikTok:** [tiktok.com/@yourhandle](https://tiktok.com/@yourhandle)
+     - **Facebook:** [facebook.com/share/1Brkbco8qC/](https://www.facebook.com/share/1Brkbco8qC/)
+     - **TikTok:** [@lola.ibrahim85](https://www.tiktok.com/@lola.ibrahim85?_r=1&_t=ZS-99q8f6ps6Sr)
      - **WhatsApp:** [wa.me/2348053472434](https://wa.me/2348053472434)
    - Information on store pickup and nationwide delivery.
 
