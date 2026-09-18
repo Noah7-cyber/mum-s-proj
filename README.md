@@ -45,7 +45,12 @@ The website incorporates the official **GInvoice Storefront** (`https://ginvoice
 
 5. **Contact & Store Details:**
    - Physical location: **22/24 Aliyu Makama Road, Barnawa GRA, Kaduna**.
-   - Direct WhatsApp & call links: **+234 805 347 2434**.
+   - Direct WhatsApp & call links: **+234 805 347 2434** ([wa.me/2348053472434](https://wa.me/2348053472434)).
+   - Social Media Handles:
+     - **Instagram:** [instagram.com/yourhandle](https://instagram.com/yourhandle)
+     - **Facebook:** [facebook.com/yourpage](https://facebook.com/yourpage)
+     - **TikTok:** [tiktok.com/@yourhandle](https://tiktok.com/@yourhandle)
+     - **WhatsApp:** [wa.me/2348053472434](https://wa.me/2348053472434)
    - Information on store pickup and nationwide delivery.
 
 ---
